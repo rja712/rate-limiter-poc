@@ -4,6 +4,7 @@ import com.example.rate_limiter_poc.annotation.RateLimit;
 import com.example.rate_limiter_poc.service.HelloService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -12,26 +13,26 @@ public class HelloController {
 
     private final HelloService helloService;
 
-    @RateLimit(limit = 5)
-    @GetMapping("/hello")
-    public String hello() {
+    @RateLimit(requestLimit = 5)
+    @GetMapping("{orgId}/hello")
+    public String hello(@PathVariable("orgId") String orgId) {
         return helloService.sayHello();
     }
 
-    @RateLimit(limit = 3)
-    @GetMapping("/hi")
+    @RateLimit(requestLimit = 3)
+    @GetMapping("{orgId}/hi")
     public String hi() {
         return helloService.sayHi();
     }
 
-    @GetMapping("/bye")
+    @GetMapping("{orgId}/bye")
     public String bye() {
         return helloService.sayBye();
     }
 
 
-    @RateLimit(limit = 10)
-    @GetMapping("/fuckOff")
+    @RateLimit(requestLimit = 10)
+    @GetMapping("{orgId}/fuckOff")
     public String fuckOff() {
         return helloService.sayFuckOff();
     }

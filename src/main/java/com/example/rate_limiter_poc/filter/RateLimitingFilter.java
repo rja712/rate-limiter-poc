@@ -17,15 +17,19 @@ import reactor.core.publisher.Mono;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
 public class RateLimitingFilter implements WebFilter {
 
     private static final String RATE_LIMIT_KEY_PREFIX = "RateLimit";
+    private static final Pattern ORG_ID_PATTERN = Pattern.compile("/api\\/(\\d+)\\/.*");
 
     private final ProxyManager<byte[]> proxyManager;
     private final RequestMappingHandlerMapping handlerMapping;
@@ -63,13 +67,24 @@ public class RateLimitingFilter implements WebFilter {
     private BucketConfiguration createBucketConfig(RateLimit rateLimit) {
         return BucketConfiguration.builder()
                 .addLimit(Bandwidth.builder()
-                        .capacity(rateLimit.limit())
-                        .refillIntervally(rateLimit.limit(), Duration.ofSeconds(rateLimit.durationSeconds()))
+                        .capacity(rateLimit.requestLimit())
+                        .refillIntervally(rateLimit.requestLimit(), Duration.ofSeconds(rateLimit.durationInSeconds()))
                         .build())
                 .build();
     }
 
     private String generateKey(ServerWebExchange exchange, HandlerMethod handlerMethod) {
+        String tenantId = Optional.ofNullable(exchange)
+                .map(ServerWebExchange::getRequest)
+                .map(ServerHttpRequest::getURI)
+                .map(URI::getPath)
+                .map(path -> {
+                    Matcher matcher = ORG_ID_PATTERN.matcher(path);
+                    return matcher.find() ? matcher.group(1) : "";
+                })
+                .orElse("");
+
+
         String ip = Optional.ofNullable(exchange)
                 .map(ServerWebExchange::getRequest)
                 .map(ServerHttpRequest::getRemoteAddress)
@@ -77,8 +92,9 @@ public class RateLimitingFilter implements WebFilter {
                 .map(InetAddress::getHostAddress)
                 .map(address -> address.replace(":", "."))
                 .orElse("unknown");
-        return String.format("%s-%s-%s-%s",
+        return String.format("%s-%s-%s-%s-%s",
                 RATE_LIMIT_KEY_PREFIX,
+                tenantId,
                 handlerMethod.getBeanType().getSimpleName(),
                 handlerMethod.getMethod().getName(),
                 ip);

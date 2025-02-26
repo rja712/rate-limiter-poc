@@ -1,6 +1,8 @@
 spring:
   application:
     name: rate-limiter-poc
+  webflux:
+    base-path: /api
 
 server:
   port: 8082

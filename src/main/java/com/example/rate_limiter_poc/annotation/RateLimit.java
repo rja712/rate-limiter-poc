@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RateLimit {
-    int limit() default Integer.MAX_VALUE;
-    long durationSeconds() default 60; // Duration in seconds, defaults to 1 minute
+    int requestLimit() default Integer.MAX_VALUE;
+    long durationInSeconds() default 60;
+    boolean isIpSpecific() default false;
 }
