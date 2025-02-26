@@ -21,19 +21,19 @@ public class HelloController {
 
     @RateLimit(requestLimit = 3)
     @GetMapping("{orgId}/hi")
-    public String hi() {
+    public String hi(@PathVariable("orgId") String orgId) {
         return helloService.sayHi();
     }
 
     @GetMapping("{orgId}/bye")
-    public String bye() {
+    public String bye(@PathVariable("orgId") String orgId) {
         return helloService.sayBye();
     }
 
 
     @RateLimit(requestLimit = 10)
     @GetMapping("{orgId}/fuckOff")
-    public String fuckOff() {
+    public String fuckOff(@PathVariable("orgId") String orgId) {
         return helloService.sayFuckOff();
     }
 }
